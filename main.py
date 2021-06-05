@@ -1,5 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+import uvicorn
 import pandas as pd
 pd.set_option('chained_assignment', None)
 import mysql.connector as cnx
@@ -24,7 +27,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+templates = Jinja2Templates(directory="templates")
+
+@app.get('/')
+def show_form(request: Request):
+    return templates.TemplateResponse('form.html', context={'request': request})
+
+@app.get("/api")
 def callAPI(request: Request):
     print('POSTED')
     format = "%Y-%m-%d %H:%M"
