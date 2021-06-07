@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+# from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-import uvicorn
+# import uvicorn
 import pandas as pd
 pd.set_option('chained_assignment', None)
 import mysql.connector as cnx
@@ -250,5 +250,9 @@ def scanner(input_date, start_time, end_time):
     shortlist_sell.loc[(shortlist_sell['low_vs_20d']=='True') & (shortlist_sell['low_vs_50d']=='False') & (shortlist_sell['low_vs_250d']=='False'), ['priority']] = 3
     shortlist_sell.drop(shortlist_sell[shortlist_sell['priority'].isna()].index, inplace=True)
     shortlist_sell.sort_values(by='priority', inplace=True)
+
+    scrips.fillna('', inplace=True)
+    shortlist_buy.fillna('', inplace=True)
+    shortlist_sell.fillna('', inplace=True)
 
     return scrips, shortlist_buy, shortlist_sell
