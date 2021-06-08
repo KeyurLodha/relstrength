@@ -214,14 +214,36 @@ def scanner(input_date, start_time, end_time):
         today_high = stock_df[(stock_df['time']>=start_time) & (stock_df['time']<=end_time)]['high'].max()
         today_low = stock_df[(stock_df['time']>=start_time) & (stock_df['time']<=end_time)]['low'].min()
 
-        high_20d = high_low_df[high_low_df['instrument_id']==id]['twentyH'].to_list()[0]
-        high_50d = high_low_df[high_low_df['instrument_id']==id]['fiftyH'].to_list()[0]
-        high_250d = high_low_df[high_low_df['instrument_id']==id]['twofiftyH'].to_list()[0]
+        try:
+            high_20d = high_low_df[high_low_df['instrument_id']==id]['twentyH'].to_list()[0]
+        except IndexError as e:
+            high_20d = np.nan
 
-        low_20d = high_low_df[high_low_df['instrument_id']==id]['twentyL'].to_list()[0]
-        low_50d = high_low_df[high_low_df['instrument_id']==id]['fiftyL'].to_list()[0]
-        low_250d = high_low_df[high_low_df['instrument_id']==id]['twofiftyL'].to_list()[0]
+        try:
+            high_50d = high_low_df[high_low_df['instrument_id']==id]['fiftyH'].to_list()[0]
+        except IndexError as e:
+            high_50d = np.nan
 
+        try:
+            high_250d = high_low_df[high_low_df['instrument_id']==id]['twofiftyH'].to_list()[0]
+        except IndexError as e:
+            high_250d = np.nan
+
+        try:
+            low_20d = high_low_df[high_low_df['instrument_id']==id]['twentyL'].to_list()[0]
+        except IndexError as e:
+            low_20d = np.nan
+
+        try:
+            low_50d = high_low_df[high_low_df['instrument_id']==id]['fiftyL'].to_list()[0]
+        except IndexError as e:
+            low_50d = np.nan
+
+        try:
+            low_250d = high_low_df[high_low_df['instrument_id']==id]['twofiftyL'].to_list()[0]
+        except IndexError as e:
+            low_250d = np.nan
+        
         high_vs_20d = 'True' if today_high>high_20d else 'False'
         high_vs_50d = 'True' if today_high>high_50d else 'False'
         high_vs_250d = 'True' if today_high>high_250d else 'False'
