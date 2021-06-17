@@ -104,13 +104,65 @@ def get_time(time_list, time_var, input_date):
     
     return rt_time, time_flag
 
+def resampler(data, sample_interval, date_col, agg_dict, na_subset):
+    
+    sampled_df = data.resample(sample_interval, on=date_col).aggregate(agg_dict)
+    sampled_df.dropna(subset=[na_subset], inplace=True)
+    sampled_df.reset_index(inplace=True)
+    
+    return sampled_df
+
+def get_vol(input_date, start_time, end_time):
+
+    day_20 = input_date - dt.timedelta(days=20)
+    yest = input_date - dt.timedelta(days=1)
+
+    try:
+        stocks_db = cnx.connect(host="164.52.207.158", user="stock", password="stockdata@data", database='stock_production')
+
+        eq_query = f'select instrument_id, ins_date, volume from instrument_scan where date(ins_date) between "{day_20}" and "{yest}";'
+        eq_df = pd.read_sql(eq_query,stocks_db, parse_dates=['ins_date'])
+
+        sl_query = 'select id, tradingsymbol from instruments where f_n_o=1 and tradingsymbol not like "%NIFTY%";'
+        sl_df = pd.read_sql(sl_query,stocks_db)
+        
+        stocks_db.close() 
+    except Exception as e:
+        stocks_db.close()
+        print(str(e))
+
+    eq_df.drop_duplicates(subset=['instrument_id', 'ins_date'], inplace=True)
+    eq_df['date'] = eq_df['ins_date'].dt.date
+    eq_df['time'] = eq_df['ins_date'].dt.time
+
+    eq_df.drop(eq_df[(eq_df['time']<start_time)].index, inplace = True)
+    eq_df.drop(eq_df[(eq_df['time']>end_time)].index, inplace = True)
+    eq_df.reset_index(inplace=True, drop=True)
+
+    id_dict = dict(sl_df.values)
+    params_list = []
+
+    for id, name in id_dict.items():
+        
+        scrip_df = eq_df[eq_df['instrument_id']==id]
+        agg_dict = {'instrument_id': 'first', 'volume': 'sum'}
+        scrip_resample = resampler(scrip_df, '1D', 'ins_date', agg_dict, 'instrument_id')
+        scrip_resample['10Davg'] = scrip_resample['volume'].rolling(window=10).mean()
+        last_10d_vol = scrip_resample[-1:]['10Davg'].to_list()[0]
+
+        params_list.append([id, name, last_10d_vol])
+
+    vol_df = pd.DataFrame(params_list, columns=['id', 'name', '10Dvol'])
+
+    return vol_df
+
 
 def scanner(input_date, start_time, end_time):
 
     try:
         stocks_db = cnx.connect(host="164.52.207.158", user="stock", password="stockdata@data", database='stock_production')
 
-        eq_query = f'select instrument_id, ins_date, open, high, low, close from instrument_scan where date(ins_date)="{input_date}" ;'
+        eq_query = f'select instrument_id, ins_date, open, high, low, close, volume from instrument_scan where date(ins_date)="{input_date}" ;'
         eq_df = pd.read_sql(eq_query,stocks_db, parse_dates=['ins_date'])
 
         high_low_query = 'select * from instrument_high;'
@@ -132,6 +184,8 @@ def scanner(input_date, start_time, end_time):
     eq_df.drop(eq_df[(eq_df['time']>dt.time(15, 29))].index, inplace = True)
     eq_df.reset_index(inplace=True, drop=True)
     eq_df.sort_values(by=['instrument_id', 'ins_date'], inplace=True)
+
+    vol_df = get_vol(input_date, start_time, end_time)
 
     temp_st = copy.deepcopy(start_time)
     temp_et = copy.deepcopy(end_time)
@@ -252,9 +306,13 @@ def scanner(input_date, start_time, end_time):
         low_vs_50d = 'True' if today_low<low_50d else 'False'
         low_vs_250d = 'True' if today_low<low_250d else 'False'
 
-        params_list.append([id, name, bchmrk_pc, stock_pc, rs_wo_beta, high_vs_20d, high_vs_50d, high_vs_250d, low_vs_20d, low_vs_50d, low_vs_250d])
+        last_10davg = vol_df[vol_df['id']==id]['10Dvol'].to_list()[0]
+        today_vol = stock_df[(stock_df['time']>=start_time) & (stock_df['time']<=end_time)]['volume'].sum()
+        vol_ratio = round(today_vol/last_10davg, 3)
+
+        params_list.append([id, name, bchmrk_pc, stock_pc, rs_wo_beta, high_vs_20d, high_vs_50d, high_vs_250d, low_vs_20d, low_vs_50d, low_vs_250d, stock_close, vol_ratio])
         
-    scrips = pd.DataFrame(params_list, columns=['id', 'name', 'bchmrk_pc', 'stock_pc', 'rs_wo_beta', 'high_vs_20d', 'high_vs_50d', 'high_vs_250d', 'low_vs_20d', 'low_vs_50d', 'low_vs_250d'])
+    scrips = pd.DataFrame(params_list, columns=['id', 'name', 'bchmrk_pc', 'stock_pc', 'rs_wo_beta', 'high_vs_20d', 'high_vs_50d', 'high_vs_250d', 'low_vs_20d', 'low_vs_50d', 'low_vs_250d', 'LTP', 'vol_ratio'])
     scrips.sort_values(by='rs_wo_beta', ascending=False, inplace=True)
 
     shortlist_buy = scrips.head(10)

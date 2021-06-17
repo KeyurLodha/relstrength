@@ -46,23 +46,23 @@
                 const shortlistBuyTable = document.getElementById('shortlistBuyTable');
                 const shortlistSellTable = document.getElementById('shortlistSellTable');
 
-                const colHeaders = "<tr><th>id</th><th>name</th><th>nifty_pc</th><th>stock_pc</th><th>rs_wo_beta</th><th>high_vs_20d</th><th>high_vs_50d</th><th>high_vs_250d</th><th>low_vs_20d</th><th>low_vs_50d</th><th>low_vs_250d</th></tr>"
+                const colHeaders = "<tr><th>id</th><th>name</th><th>nifty_pc</th><th>stock_pc</th><th>rs_wo_beta</th><th>high_vs_20d</th><th>high_vs_50d</th><th>high_vs_250d</th><th>low_vs_20d</th><th>low_vs_50d</th><th>low_vs_250d</th><th>LTP</th><th>vol_ratio</th></tr>"
 
                 scripsTable.innerHTML = colHeaders;
                 shortlistBuyTable.innerHTML = colHeaders;
                 shortlistSellTable.innerHTML = colHeaders;
                 
                 for (row of x.scrips){
-                	scripsTable.innerHTML += `<tr><td>${row.id}</td><td>${row.name}</td><td>${row.bchmrk_pc}</td><td>${row.stock_pc}</td><td>${row.rs_wo_beta}</td><td>${row.high_vs_20d}</td><td>${row.high_vs_50d}</td><td>${row.high_vs_250d}</td><td>${row.low_vs_20d}</td><td>${row.low_vs_50d}</td><td>${row.low_vs_250d}</td></tr>`
+                	scripsTable.innerHTML += `<tr><td>${row.id}</td><td>${row.name}</td><td>${row.bchmrk_pc}</td><td>${row.stock_pc}</td><td>${row.rs_wo_beta}</td><td>${row.high_vs_20d}</td><td>${row.high_vs_50d}</td><td>${row.high_vs_250d}</td><td>${row.low_vs_20d}</td><td>${row.low_vs_50d}</td><td>${row.low_vs_250d}</td><td>${row.LTP}</td><td>${row.vol_ratio}</td></tr>`
                 }
                 if (x.shortlist_buy.length){
                     for (row of x.shortlist_buy){
-                        shortlistBuyTable.innerHTML += `<tr><td>${row.id}</td><td>${row.name}</td><td>${row.bchmrk_pc}</td><td>${row.stock_pc}</td><td>${row.rs_wo_beta}</td><td>${row.high_vs_20d}</td><td>${row.high_vs_50d}</td><td>${row.high_vs_250d}</td><td>${row.low_vs_20d}</td><td>${row.low_vs_50d}</td><td>${row.low_vs_250d}</td></tr>`
+                        shortlistBuyTable.innerHTML += `<tr><td>${row.id}</td><td>${row.name}</td><td>${row.bchmrk_pc}</td><td>${row.stock_pc}</td><td>${row.rs_wo_beta}</td><td>${row.high_vs_20d}</td><td>${row.high_vs_50d}</td><td>${row.high_vs_250d}</td><td>${row.low_vs_20d}</td><td>${row.low_vs_50d}</td><td>${row.low_vs_250d}</td><td>${row.LTP}</td><td>${row.vol_ratio}</td></tr>`
                 }
             }
                 if (x.shortlist_sell.length){
                     for (row of x.shortlist_sell){
-                        shortlistSellTable.innerHTML += `<tr><td>${row.id}</td><td>${row.name}</td><td>${row.bchmrk_pc}</td><td>${row.stock_pc}</td><td>${row.rs_wo_beta}</td><td>${row.high_vs_20d}</td><td>${row.high_vs_50d}</td><td>${row.high_vs_250d}</td><td>${row.low_vs_20d}</td><td>${row.low_vs_50d}</td><td>${row.low_vs_250d}</td></tr>`
+                        shortlistSellTable.innerHTML += `<tr><td>${row.id}</td><td>${row.name}</td><td>${row.bchmrk_pc}</td><td>${row.stock_pc}</td><td>${row.rs_wo_beta}</td><td>${row.high_vs_20d}</td><td>${row.high_vs_50d}</td><td>${row.high_vs_250d}</td><td>${row.low_vs_20d}</td><td>${row.low_vs_50d}</td><td>${row.low_vs_250d}</td><td>${row.LTP}</td><td>${row.vol_ratio}</td></tr>`
                 }
             }
                 }
