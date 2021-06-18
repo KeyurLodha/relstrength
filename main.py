@@ -62,13 +62,17 @@ def callAPI(request: Request):
         rtn_data = {'scrips': s1, 'shortlist_buy': s2, 'shortlist_sell': s3, 'time': time_str}
         payload = json.dumps(rtn_data)
     else:
-        if curr_time.minute%15==0:
-            start_time = (curr_datetime - timedelta(minutes=15)).time()
-            end_time = curr_time
-        else:
-            end_time_dt = round_minutes(curr_datetime, 'down', 15)
-            end_time = end_time_dt.time()
-            start_time = (end_time_dt - timedelta(minutes=15)).time()
+        # if curr_time.minute%15==0:
+        #     start_time = (curr_datetime - timedelta(minutes=15)).time()
+        #     end_time = curr_time
+        # else:
+        #     end_time_dt = round_minutes(curr_datetime, 'down', 15)
+        #     end_time = end_time_dt.time()
+        #     start_time = (end_time_dt - timedelta(minutes=15)).time()
+
+        curr_date = dt.date(2021, 6, 16)
+        start_time = dt.time(9, 30)
+        end_time = dt.time(15, 15)
 
         scrips, shortlist_buy, shortlist_sell = scanner(curr_date, start_time, end_time)
         s1 = scrips.to_dict(orient="records")
@@ -265,36 +269,38 @@ def scanner(input_date, start_time, end_time):
 
         rs_wo_beta = round(stock_pc - bchmrk_pc, 4)
 
-        today_high = stock_df[(stock_df['time']>=start_time) & (stock_df['time']<=end_time)]['high'].max()
-        today_low = stock_df[(stock_df['time']>=start_time) & (stock_df['time']<=end_time)]['low'].min()
+        stock_range = stock_df[(stock_df['time']>=start_time) & (stock_df['time']<=end_time)]
+        today_high = stock_range['high'].max()
+        today_low = stock_range['low'].min()
 
+        stock_hl_df = high_low_df[high_low_df['instrument_id']==id]
         try:
-            high_20d = high_low_df[high_low_df['instrument_id']==id]['twentyH'].to_list()[0]
+            high_20d = stock_hl_df['twentyH'].to_list()[0]
         except IndexError as e:
             high_20d = np.nan
 
         try:
-            high_50d = high_low_df[high_low_df['instrument_id']==id]['fiftyH'].to_list()[0]
+            high_50d = stock_hl_df['fiftyH'].to_list()[0]
         except IndexError as e:
             high_50d = np.nan
 
         try:
-            high_250d = high_low_df[high_low_df['instrument_id']==id]['twofiftyH'].to_list()[0]
+            high_250d = stock_hl_df['twofiftyH'].to_list()[0]
         except IndexError as e:
             high_250d = np.nan
 
         try:
-            low_20d = high_low_df[high_low_df['instrument_id']==id]['twentyL'].to_list()[0]
+            low_20d = stock_hl_df['twentyL'].to_list()[0]
         except IndexError as e:
             low_20d = np.nan
 
         try:
-            low_50d = high_low_df[high_low_df['instrument_id']==id]['fiftyL'].to_list()[0]
+            low_50d = stock_hl_df['fiftyL'].to_list()[0]
         except IndexError as e:
             low_50d = np.nan
 
         try:
-            low_250d = high_low_df[high_low_df['instrument_id']==id]['twofiftyL'].to_list()[0]
+            low_250d = stock_hl_df['twofiftyL'].to_list()[0]
         except IndexError as e:
             low_250d = np.nan
         
@@ -307,7 +313,7 @@ def scanner(input_date, start_time, end_time):
         low_vs_250d = 'True' if today_low<low_250d else 'False'
 
         last_10davg = vol_df[vol_df['id']==id]['10Dvol'].to_list()[0]
-        today_vol = stock_df[(stock_df['time']>=start_time) & (stock_df['time']<=end_time)]['volume'].sum()
+        today_vol = stock_range['volume'].sum()
         vol_ratio = round(today_vol/last_10davg, 3)
 
         params_list.append([id, name, bchmrk_pc, stock_pc, rs_wo_beta, high_vs_20d, high_vs_50d, high_vs_250d, low_vs_20d, low_vs_50d, low_vs_250d, stock_close, vol_ratio])
@@ -330,6 +336,22 @@ def scanner(input_date, start_time, end_time):
     shortlist_sell.loc[(shortlist_sell['low_vs_20d']=='True') & (shortlist_sell['low_vs_50d']=='False') & (shortlist_sell['low_vs_250d']=='False'), ['priority']] = 3
     shortlist_sell.drop(shortlist_sell[shortlist_sell['priority'].isna()].index, inplace=True)
     shortlist_sell.sort_values(by='priority', inplace=True)
+
+    # shortlist_buy = shortlist_sell = scrips.head(10)
+    # shortlist_buy['priority'] = shortlist_sell['priority'] = np.nan
+    # x = shortlist_buy['high_vs_250d']=='False'
+    # shortlist_buy.loc[shortlist_buy['high_vs_250d']=='True', ['priority']] = 1
+    # shortlist_buy.loc[(shortlist_buy['high_vs_50d']=='True') & (x), ['priority']] = 2
+    # shortlist_buy.loc[(shortlist_buy['high_vs_20d']=='True') & (shortlist_buy['high_vs_50d']=='False') & (x), ['priority']] = 3
+    # shortlist_buy.drop(shortlist_buy[shortlist_buy['priority'].isna()].index, inplace=True)
+    # shortlist_buy.sort_values(by='priority', inplace=True)
+
+    # y = shortlist_sell['low_vs_250d']=='False'
+    # shortlist_sell.loc[shortlist_sell['low_vs_250d']=='True', ['priority']] = 1
+    # shortlist_sell.loc[(shortlist_sell['low_vs_50d']=='True') & (y), ['priority']] = 2
+    # shortlist_sell.loc[(shortlist_sell['low_vs_20d']=='True') & (shortlist_sell['low_vs_50d']=='False') & (y), ['priority']] = 3
+    # shortlist_sell.drop(shortlist_sell[shortlist_sell['priority'].isna()].index, inplace=True)
+    # shortlist_sell.sort_values(by='priority', inplace=True)
 
     scrips.fillna('', inplace=True)
     shortlist_buy.fillna('', inplace=True)
