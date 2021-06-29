@@ -62,17 +62,17 @@ def callAPI(request: Request):
         rtn_data = {'scrips': s1, 'shortlist_buy': s2, 'shortlist_sell': s3, 'time': time_str}
         payload = json.dumps(rtn_data)
     else:
-        # if curr_time.minute%15==0:
-        #     start_time = (curr_datetime - timedelta(minutes=15)).time()
-        #     end_time = curr_time
-        # else:
-        #     end_time_dt = round_minutes(curr_datetime, 'down', 15)
-        #     end_time = end_time_dt.time()
-        #     start_time = (end_time_dt - timedelta(minutes=15)).time()
+        if curr_time.minute%15==0:
+            start_time = (curr_datetime - timedelta(minutes=15)).time()
+            end_time = curr_time
+        else:
+            end_time_dt = round_minutes(curr_datetime, 'down', 15)
+            end_time = end_time_dt.time()
+            start_time = (end_time_dt - timedelta(minutes=15)).time()
 
-        curr_date = dt.date(2021, 6, 16)
-        start_time = dt.time(9, 30)
-        end_time = dt.time(15, 15)
+        # curr_date = dt.date(2021, 6, 16)
+        # start_time = dt.time(9, 30)
+        # end_time = dt.time(15, 15)
 
         scrips, shortlist_buy, shortlist_sell = scanner(curr_date, start_time, end_time)
         s1 = scrips.to_dict(orient="records")
